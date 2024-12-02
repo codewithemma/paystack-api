@@ -13,7 +13,7 @@ const paymentWebhook = async (req, res) => {
       .split(",")[0]
       .trim();
 
-    //! Validate IP Addresses from Paystack
+    // ! Validate IP Addresses from Paystack
     const isIpAllowed = PAYSTACK_IPS.some((allowedIP) => {
       if (allowedIP.includes("/")) {
         // Handle CIDR notation
@@ -33,7 +33,6 @@ const paymentWebhook = async (req, res) => {
     if (!isIpAllowed) {
       return res.status(403).json({ message: "Forbidden: Invalid IP Address" });
     }
-
     const hash = crypto
       .createHmac("sha512", PAYSTACK_SECRET_KEY)
       .update(JSON.stringify(req.body))
@@ -41,24 +40,15 @@ const paymentWebhook = async (req, res) => {
 
     if (hash == req.headers["x-paystack-signature"]) {
       const event = req.body;
-      //   console.log("Webhook received:", event);
       switch (event.event) {
         case "charge.success":
           console.log("Payment successful:", event.data);
-          // Update your database, send a confirmation email, etc.
-          break;
-        case "charge.failed":
-          console.log("Payment failed:", event.data);
-          // Handle failed payment: update your database, notify the user, etc.
-          break;
-        case "charge.cancelled":
-          console.log("Payment cancelled:", event.data);
-          // Handle cancelled payment: update your database, notify the user, etc.
           break;
         default:
           console.log("Unhandled event:", event.event);
       }
     }
+    res.sendStatus(200);
   } catch (error) {
     res.status(500).json({ message: error || "Internal Server Error" });
   }
